@@ -4,14 +4,21 @@ from dotenv import load_dotenv
 from discord.ext import commands
 from discord import app_commands
 from pymongo import MongoClient
+from datetime import timedelta
+import time
 
 load_dotenv()
 
 client = MongoClient(os.getenv("MONGO_URI"))
+db = client['Cluster0']
+economy = db['economy']
+countdown = db['countdown']
 
 bot = commands.Bot(command_prefix=".", intents=discord.Intents.all(), help_command=None)
 
 # Prefix Commands
+
+# BASIC COMMANDS
 @bot.command(name="ping")
 async def ping(ctx):
     await ctx.reply("Pong!")
@@ -34,8 +41,50 @@ async def botinfo(ctx):
     )
     await ctx.reply(embed=embed)
 
+# ECONOMY COMMANDS
+
+@bot.command(name="open")
+async def open(ctx):
+    acc = economy.find_one({
+        "userid": ctx.author.id
+    })
+    if acc:
+        embed=discord.Embed(
+            title="Account already exists!",
+            description="You already have an account in my database and cannot create another.",
+            color=discord.Color.red()
+        )
+        return await ctx.reply(embed=embed)
+
+    economy.insert_one({
+        "userid": ctx.author.id,
+        "balance": 1000,
+        "job": 0,
+        "createdat": int(time.time())
+    })
+
+    countdown.update_one({
+        "userid": ctx.author.id,
+    },
+    {
+        "$setOnInsert": {
+            'rob': int(time.time()),
+            'daily': int(time.time()),
+            'heist': int(time.time()),
+            'job': 0
+        }
+    }, upsert=True)
+
+    embed = discord.Embed(
+        title="Account Opened!",
+        description="Account has successfully opened!\nWe have added `1000` coins to your bank account as welcome bonus.\nThank you for banking with us!",
+        color=discord.Color.green()
+    )
+    await ctx.reply(embed=embed)
+
 # Tree Commands (SLASH)
 
+# BASIC COMMANDS
 @bot.tree.command(name="ping", description="Ping the bot")
 async def ping_sl(interaction: discord.Interaction):
     await interaction.response.send_message("Pong!")
@@ -54,6 +103,50 @@ async def botinfo_sl(interaction: discord.Interaction):
     embed=discord.Embed(
         title="Bot Info - Currency",
         description="Hello! My name is **Currency**.\nDeveloper: theysaykings (GitHub: hasancooksfr)\nI am open-sourced on GitHub.\nMy main function is to handle currency and bank commands, working as a discord economy bot.",
+        color=discord.Color.green()
+    )
+    await interaction.response.send_message(embed=embed)
+
+# ECONOMY COMMANDS
+
+@bot.tree.command(name="open", description="Open a currency account")
+async def open_sl(interaction: discord.Interaction):
+    acc = economy.find_one({
+        "userid": interaction.user.id
+    })
+    if acc:
+        embed=discord.Embed(
+            title="Account already exists!",
+            description="You already have an account in my database and cannot create another.",
+            color=discord.Color.red()
+        )
+        return await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    economy.insert_one({
+        "userid": interaction.user.id,
+        "balance": 1000,
+        "job": 0,
+        "createdat": int(time.time())
+    })
+
+    countdown.update_one(
+        {
+            "userid": interaction.user.id
+        },
+        {
+            "$setOnInsert": {
+                "rob": int(time.time()),
+                "daily": int(time.time()),
+                "heist": int(time.time()),
+                "job": 0
+            }
+        },
+        upsert=True
+    )
+
+    embed=discord.Embed(
+        title="Account Opened!",
+        description="Account has successfully opened!\nWe have added `1000` coins to your bank account as welcome bonus.\nThank you for banking with us!",
         color=discord.Color.green()
     )
     await interaction.response.send_message(embed=embed)
