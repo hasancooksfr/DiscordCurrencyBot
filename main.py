@@ -82,6 +82,27 @@ async def open(ctx):
     )
     await ctx.reply(embed=embed)
 
+@bot.command(name="balance")
+async def balance(ctx):
+    acc = economy.find_one({
+        "userid": ctx.author.id
+    }, {"_id": 0})
+    if not acc:
+        embed=discord.Embed(
+            title="You don't have an open currency account!",
+            description="Use `.open` to open a currency account.",
+            color=discord.Color.red()
+        )
+        return await ctx.reply(embed=embed)
+    
+    embed=discord.Embed(
+        title=f"Available balance of {ctx.author}",
+        description=f"You currently have `{acc['balance']}` in your currency account!",
+        color=discord.Color.green()
+    )
+    await ctx.reply(embed=embed)
+    
+
 # Tree Commands (SLASH)
 
 # BASIC COMMANDS
@@ -147,6 +168,24 @@ async def open_sl(interaction: discord.Interaction):
     embed=discord.Embed(
         title="Account Opened!",
         description="Account has successfully opened!\nWe have added `1000` coins to your bank account as welcome bonus.\nThank you for banking with us!",
+        color=discord.Color.green()
+    )
+    await interaction.response.send_message(embed=embed)
+
+@bot.tree.command(name="balance", description="Get your available currency balance")
+async def balance(interaction: discord.Interaction):
+    acc = economy.find_one({"userid": interaction.user.id})
+    if not acc:
+        embed=discord.Embed(
+            title="You don't have an open currency account!",
+            description="Use `/open` to open a currency account.",
+            color=discord.Color.red()
+        )
+        return await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    embed=discord.Embed(
+        title=f"Available balance of {interaction.user}",
+        description=f"You currently have `{acc['balance']}` in your currency account!",
         color=discord.Color.green()
     )
     await interaction.response.send_message(embed=embed)
