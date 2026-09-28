@@ -229,6 +229,116 @@ async def daily(ctx):
     )
     await ctx.reply(embed=embed)
 
+@bot.command(name="rob")
+async def rob(ctx, user: discord.Member = None):
+    if not user:
+        embed= discord.Embed(
+            title="Invalid command usage!",
+            description="Please mention a @user!",
+            color=discord.Color.red()
+        )
+        return await ctx.reply(embed=embed)
+
+    acc = economy.find_one({"userid": ctx.author.id})
+    if not acc:
+        embed= discord.Embed(
+            title="Account not found!",
+            description="You don't have an active currency account!\nUse `.open` to open one.",
+            color=discord.Color.red()
+        )
+        return await ctx.reply(embed=embed)
+
+    acc2 = economy.find_one({"userid": user.id})
+    if not acc2:
+        embed = discord.Embed(
+            title="Account not found!",
+            description=f"{user.mention} doesn't have an active currency account.",
+            color=discord.Color.red()
+        )
+        return await ctx.reply(embed=embed)
+
+    cd = countdown.find_one({"userid": ctx.author.id})
+    if cd['rob'] > int(time.time()):
+        embed=discord.Embed(
+            title="Calm Down!",
+            description=f"You can't use this command right now. Check back later <t:{cd['rob']}:R>.",
+            color=discord.Color.yellow()
+        )
+        return await ctx.reply(embed=embed)
+
+    chance = random.randint(1,10)
+    amount = random.randint(0, int(acc2['balance'] * 0.40))
+
+    countdown.update_one(
+        {
+            "userid": ctx.author.id
+        },
+        {
+            "$set": {
+                "rob": (int(time.time()) + 86400)
+            }
+        }
+    )
+
+    if chance >= 5: #Success
+
+        economy.update_one(
+            {
+                "userid": ctx.author.id
+            },
+            {
+                "$inc": {
+                    "balance": amount
+                }
+            }
+        )
+
+        economy.update_one(
+            {
+                "userid": user.id
+            },
+            {
+                "$inc": {
+                    "balance": -amount
+                }
+            }
+        )
+
+        try:
+            embed=discord.Embed(
+                title="You have been robbed!",
+                description=f"You have been robbed by {ctx.author.mention} in {ctx.guild} for {amount} coins!",
+                color=discord.Color.red()
+            )
+            await user.send(embed=embed)
+        except:
+            pass
+
+        embed = discord.Embed(
+            title="Robbery Successfully!",
+            description=f"You robbed {user.mention} for {amount}!",
+            color=discord.Color.gold()
+        )
+        await ctx.reply(embed=embed)
+    
+    else: #Failure
+        amount = random.randint(0, (int(acc2['balance']) * 0.30))
+        economy.update_one(
+            {
+                "userid": ctx.author.id
+            },
+            {
+                "$inc": -amount
+            }
+        )
+
+        embed = discord.Embed(
+            title="CAUGHT!",
+            description=f"You tried to rob {user.mention} but got caught!\nYou have been fined for {amount} coins.",
+            color=discord.Color.red()
+        )
+        await ctx.reply(embed=embed)
+
 # Tree Commands (SLASH)
 
 # BASIC COMMANDS
