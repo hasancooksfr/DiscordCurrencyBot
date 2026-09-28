@@ -102,6 +102,82 @@ async def balance(ctx):
     )
     await ctx.reply(embed=embed)
     
+@bot.command(name="transfer", aliases=['send'])
+async def transfer(ctx, user: discord.Member = None, coins: int = None):
+    if not user:
+        embed=discord.Embed(
+            title="Invalid command usage!",
+            description="Please mention a user to whom you want to send coins.",
+            color=discord.Color.red()
+        )
+        return await ctx.reply(embed=embed)
+
+    if not coins:
+        embed=discord.Embed(
+            title="Invalid command usage!",
+            description="Please mention amount of coins to transfer.",
+            color=discord.Color.red()
+        )
+        return await ctx.reply(embed=embed)
+
+    if user.id == ctx.author.id:
+        return await ctx.reply("Nice try but you can't transfer to yourself.")
+
+    acc = economy.find_one({"userid": ctx.author.id})
+    if not acc:
+        embed=discord.Embed(
+            title="Account not found!",
+            description="You don't have an active currency account.\nOpen one using `.open`",
+            color=discord.Color.red()
+        )
+        return await ctx.reply(embed=embed)
+
+    acc2 = economy.find_one({"userid": user.id})
+    if not acc2:
+        embed=discord.Embed(
+            title="Account not found!",
+            description=f"{user.mention} don't have an active currency account.",
+            color=discord.Color.red()
+        )
+        return await ctx.reply(embed=embed)
+
+    if coins > 0 and coins <= acc['balance']:
+        economy.update_one(
+            {
+                "userid": ctx.author.id
+            },
+            {
+                "$inc": {
+                    "balance": -coins
+                }
+            }
+        )
+
+        economy.update_one(
+            {
+                "userid": user.id
+            },
+            {
+                "$inc": {
+                    "balance": coins
+                }
+            }
+        )
+
+        embed=discord.Embed(
+            title="Transfer successful!",
+            description=f"Paid to: {user.mention}\nAmount: {coins}\nTransfer Completed!",
+            color=discord.Color.green()
+        )
+        await ctx.reply(embed=embed)
+
+    else:
+        embed=discord.Embed(
+            title="Insufficient Balance or Wrong Entry!",
+            description="Transfer couldn't be completed due to insufficient balance. Try a lower value.\nThis can mean that you have entered a wrong amount that can't be processed.",
+            color=discord.Color.red()
+        )
+        await ctx.reply(embed=embed)
 
 # Tree Commands (SLASH)
 
@@ -189,6 +265,69 @@ async def balance(interaction: discord.Interaction):
         color=discord.Color.green()
     )
     await interaction.response.send_message(embed=embed)
+
+@bot.tree.command(name="transfer", description="Transfer coins to your friends!")
+async def transfer_sl(interaction: discord.Interaction, user: discord.Member, coins: int):
+    await interaction.response.defer()
+
+    if user.id == interaction.user.id:
+        return await interaction.followup.send("Nice try but you can't transfer to yourself.", ephemeral=True)
+
+    acc = economy.find_one({"userid": interaction.user.id})
+    if not acc:
+        embed=discord.Embed(
+            title="Account not found!",
+            description="You don't have an active currency account.\nUse `/open` to open one.",
+            color=discord.Color.red()
+        )
+        return await interaction.followup.send(embed=embed, ephemeral=True)
+
+    acc2 = economy.find_one({"userid": user.id})
+    if not acc2:
+        embed=discord.Embed(
+            title="Account not found!",
+            description=f"{user.mention} doesn't have an active currency account.",
+            color=discord.Color.red()
+        )
+        return await interaction.followup.send(embed=embed)
+
+    if coins > 0 and acc['balance'] >= coins:
+        economy.update_one(
+            {
+                "userid": interaction.user.id
+            },
+            {
+                "$inc": {
+                    "balance": -coins
+                }
+            }
+        )
+
+        economy.update_one(
+            {
+                "userid": user.id
+            },
+            {
+                "$inc": {
+                    "balance": coins
+                }
+            }
+        )
+
+        embed=discord.Embed(
+            title="Transfer successful!",
+            description=f"Paid to: {user.mention}\nAmount: {coins}\nTransfer completed!",
+            color=discord.Color.green()
+        )
+        await interaction.followup.send(embed=embed)
+
+    else:
+        embed=discord.Embed(
+            title="Insufficient Balance or Wrong Entry!",
+            description="Transfer couldn't be completed due to insufficient balance. Try a lower value.\nThis can mean that you have entered a wrong amount that can't be processed.",
+            color=discord.Color.red()
+        )
+        await interaction.followup.send(embed=embed)
 
 # Events
 @bot.event
