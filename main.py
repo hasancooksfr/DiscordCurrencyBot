@@ -6,6 +6,7 @@ from discord import app_commands
 from pymongo import MongoClient
 from datetime import timedelta
 import time
+import random
 
 load_dotenv()
 
@@ -179,6 +180,55 @@ async def transfer(ctx, user: discord.Member = None, coins: int = None):
         )
         await ctx.reply(embed=embed)
 
+@bot.command(name="daily")
+async def daily(ctx):
+    acc = economy.find_one({"userid": ctx.author.id})
+    if not acc:
+        embed=discord.Embed(
+            title="Account not found!",
+            description="You don't have an active currency account.\nUse `.open` to open one.",
+            color=discord.Color.red()
+        )
+        return await ctx.reply(embed=embed)
+
+    cd = countdown.find_one({"userid": ctx.author.id})
+    if cd['daily'] > int(time.time()):
+        embed=discord.Embed(
+            title="Hold on!",
+            description=f"You have already redeemed your daily.\nYour next daily reward comes <t:{cd['daily']}:R>",
+            color=discord.Color.yellow()
+        )
+        return await ctx.reply(embed=embed)
+
+    coins = random.randint(250,2500)
+    economy.update_one(
+        {
+            "userid": ctx.author.id
+        },
+        {
+            "$inc": {
+                "balance": coins
+            }
+        }
+    )
+    countdown.update_one(
+        {
+            "userid": ctx.author.id
+        },
+        {
+            "$set": {
+                "daily": (int(time.time()) + 86400)
+            }
+        }
+    )
+
+    embed = discord.Embed(
+        title="Daily claimed!",
+        description=f"You have claimed {coins} coins as your daily reward! Claim one tomorrow again.",
+        color=discord.Color.green()
+    )
+    await ctx.reply(embed=embed)
+
 # Tree Commands (SLASH)
 
 # BASIC COMMANDS
@@ -328,6 +378,58 @@ async def transfer_sl(interaction: discord.Interaction, user: discord.Member, co
             color=discord.Color.red()
         )
         await interaction.followup.send(embed=embed)
+
+@bot.tree.command(name="daily", description="Claim your daily reward")
+async def daily_sl(interaction: discord.Interaction):
+    await interaction.response.defer()
+
+    acc = economy.find_one({"userid": interaction.user.id})
+    if not acc:
+        embed=discord.Embed(
+            title="Account not found!",
+            description="You don't have an active currency account.\nUse `.open` to open one!",
+            color=discord.Color.red()
+        )
+        return await interaction.followup.send(embed=embed, ephemeral=True)
+
+    cd = countdown.find_one({"userid": interaction.user.id})
+    if cd['daily'] > int(time.time()):
+        embed=discord.Embed(
+            title="Hold On!",
+            description=f"You have already claimed your daily reward today!\nClaim next reward <t:{cd['daily']}:R>.",
+            color=discord.Color.yellow()
+        )
+        return await interaction.followup.send(embed=embed, ephemeral=True)
+
+    coins = random.randint(250,2500)
+
+    economy.update_one(
+        {
+            "userid": interaction.user.id
+        },
+        {
+            "$inc": {
+                "balance": coins
+            }
+        }
+    )
+    countdown.update_one(
+        {
+            "userid": interaction.user.id
+        },
+        {
+            "$set": {
+                "daily": (int(time.time()) + 86400)
+            }
+        }
+    )
+
+    embed=discord.Embed(
+        title="Daily Claimed!",
+        description=f"You have claimed {coins} coins as your daily reward! Claim one tomorrow again.",
+        color=discord.Color.green()
+    )
+    await interaction.followup.send(embed=embed)
 
 # Events
 @bot.event
