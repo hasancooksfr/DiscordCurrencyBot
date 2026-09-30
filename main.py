@@ -634,6 +634,25 @@ async def heist(ctx):
         )
         await ctx.reply(embed=embed)
 
+@bot.command(name="deactivate")
+async def deactivate(ctx):
+    acc = economy.delete_one({
+        "userid": ctx.author.id
+    })
+    if acc.deleted_count == 0:
+        embed= discord.Embed(
+            title="Account not found!",
+            description="You don't have a currency account.",
+            color=discord.Color.red()
+        )
+        return await ctx.reply(embed=embed)
+
+    embed=discord.Embed(
+        title="Account Deleted!",
+        description=f"Your account is successfully deleted!\nYour balance is now gone forever.",
+        color=discord.Color.red()
+    )
+    await ctx.reply(embed=embed)
 
 # Tree Commands (SLASH)
 
@@ -1138,6 +1157,26 @@ async def heist_sl(interaction: discord.Interaction):
             color=discord.Color.red()
         )
         await interaction.followup.send(embed=embed)
+
+@bot.tree.command(name="deactivate", description="Deactivate your account forever!")
+async def deactivate_sl(interaction: discord.Interaction):
+    acc = economy.delete_one({
+        "userid": interaction.user.id
+    })
+    if acc.deleted_count == 0:
+        embed= discord.Embed(
+            title="Account not found!",
+            description="You don't have a currency account.",
+            color=discord.Color.red()
+        )
+        return await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    embed=discord.Embed(
+        title="Account Deleted!",
+        description=f"Your account is successfully deleted!\nYour balance is now gone forever.",
+        color=discord.Color.red()
+    )
+    await interaction.response.send_message(embed=embed)
 
 # Events
 @bot.event
