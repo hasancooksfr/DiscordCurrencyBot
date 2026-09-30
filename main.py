@@ -120,6 +120,12 @@ async def help(ctx):
         value="Rob an entire bank for high rewards (high risk too)\n`.heist` or `.bankrob`",
         inline=False
     )
+    embed.add_field(
+        name=".deactivate",
+        value="Deactivate your account forever. (Balance reset on opening a new account)",
+        inline=False
+    )
+    
     await ctx.reply(embed=embed)
 
 
@@ -754,6 +760,11 @@ async def help_sl(interaction: discord.Interaction):
     embed.add_field(
         name=".heist (bankrob)",
         value="Rob an entire bank for high rewards (high risk too)\n`.heist` or `.bankrob`",
+        inline=False
+    )
+    embed.add_field(
+        name=".deactivate",
+        value="Deactivate your account forever. (Balance reset on opening a new account)",
         inline=False
     )
     await interaction.response.send_message(embed=embed)
