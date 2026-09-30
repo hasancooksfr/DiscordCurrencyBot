@@ -6,6 +6,7 @@ from discord import app_commands
 from pymongo import MongoClient
 from datetime import timedelta
 import time
+import math
 import random
 
 load_dotenv()
@@ -465,6 +466,94 @@ async def coinflip(ctx, amount: int = None, guess: str = "heads"):
             )
             await ctx.reply(embed=embed)
 
+@bot.command(name="heist", aliases=['bankrob'])
+async def heist(ctx):
+    acc = economy.find_one({"userid": ctx.author.id})
+    if not acc:
+        embed = discord.Embed(
+            title="Account not found!",
+            description="You don't have an active currency account.\nUse `.open` to open one.",
+            color=discord.Color.red()
+        )
+        return await ctx.reply(embed=embed)
+
+    cd = countdown.find_one({"userid": ctx.author.id})
+    if cd['heist'] > int(time.time()):
+        embed=discord.Embed(
+            title="Take a break!",
+            description=f"You can't do heists this fast, calm down and try again <t:{cd['heist']}:R>",
+            color=discord.Color.yellow()
+        )
+        return await ctx.reply(embed=embed)
+
+    countdown.update_one(
+        {
+            "userid": ctx.author.id
+        },
+        {
+            "$set": {
+                "heist": (int(time.time()) + 172800)
+            }
+        }
+    )
+
+    chance = random.randint(1,100)
+    amount = random.randint(5000, 15000)
+    if chance <= 30: # Successful heist
+        economy.update_one({
+            "userid": ctx.author.id
+        }, {
+            "$inc": {
+                "balance": amount
+            }
+        })
+
+        embed = discord.Embed(
+            title="Heist Successful!",
+            description=f"You successfully took {amount} from bank and escaped!",
+            color=discord.Color.green()
+        )
+        await ctx.reply(embed=embed)
+
+    elif chance <= 60: # Barely Made it (amount x 40%)
+        economy.update_one(
+            {
+                "userid": ctx.author.id
+            },
+            {
+                "$inc": {
+                    "balance": (amount * 0.40)
+                }
+            }
+        )
+        embed= discord.Embed(
+            title="Barely made it!",
+            description=f"Police was called on you but you managed to espace with 40% coins: `{(amount * 0.40)}`",
+            color=discord.Color.yellow()
+        )
+        await ctx.reply(embed=embed)
+
+    elif chance <= 100: # Arrested + Fined
+        balance = math.ceil(acc['balance'])
+        andom.randint((math.ceil(balance * 0.30)), (math.ceil(balance * 0.60)))
+
+        economy.update_one(
+            {
+                "userid": ctx.author.id
+            },
+            {
+                "$inc": {
+                    "balance": -fine
+                }
+            }
+        )
+        embed=discord.Embed(
+            title="YOU ARE UNDER ARREST!",
+            description=f"You are caught by the police and got fined of {fine} coins.\nBetter luck next time.",
+            color=discord.Color.red()
+        )
+        await ctx.reply(embed=embed)
+
 
 # Tree Commands (SLASH)
 
@@ -796,6 +885,99 @@ async def coinflip_sl(interaction: discord.Interaction, amount: int = None, gues
                 color=discord.Color.red()
             )
             await interaction.followup.send(embed=embed)
+
+@bot.tree.command(name="heist", description="Rob a bank for highest risk, and highest reward!")
+async def heist_sl(interaction: discord.Interaction):
+    await interaction.response.defer()
+
+    acc = economy.find_one({"userid": interaction.user.id})
+    if not acc:
+        embed = discord.Embed(
+            title="Account not found!",
+            description="You don't have an active currency account.\nUse `/open` to open one.",
+            color=discord.Color.red()
+        )
+        return await interaction.followup.send(embed=embed, ephemeral=True)
+
+    cd = countdown.find_one({"userid": interaction.user.id})
+    if cd['heist'] > int(time.time()):
+        embed=discord.Embed(
+            title="Take a break!",
+            description=f"You can't do heists this fast, calm down and try again <t:{cd['heist']}:R>",
+            color=discord.Color.yellow()
+        )
+        return await interaction.followup.send(embed=embed, ephemeral=True)
+
+    countdown.update_one(
+        {
+            "userid": interaction.user.id
+        },
+        {
+            "$set": {
+                "heist": (int(time.time()) + 172800)
+            }
+        }
+    )
+
+    chance = random.randint(1, 100)
+    amount = random.randint(5000, 15000)
+    if chance <= 30: # Successful heist
+        economy.update_one(
+            {
+                "userid": interaction.user.id
+            },
+            {
+                "$inc": {
+                    "balance": amount
+                }
+            }
+        )
+
+        embed = discord.Embed(
+            title="Heist Successful!",
+            description=f"You successfully took {amount} from bank and escaped!",
+            color=discord.Color.green()
+        )
+        await interaction.followup.send(embed=embed)
+
+    elif chance <= 60: # Barely Made it (amount x 40%)
+        economy.update_one(
+            {
+                "userid": interaction.user.id
+            },
+            {
+                "$inc": {
+                    "balance": (amount * 0.40)
+                }
+            }
+        )
+        embed= discord.Embed(
+            title="Barely made it!",
+            description=f"Police was called on you but you managed to espace with 40% coins: `{(amount * 0.40)}`",
+            color=discord.Color.yellow()
+        )
+        await interaction.followup.send(embed=embed)
+
+    elif chance <= 100: # Arrested + Fined
+        balance = math.ceil(acc['balance'])
+        fine = random.randint((math.ceil(balance * 0.30)), (math.ceil(balance * 0.60)))
+
+        economy.update_one(
+            {
+                "userid": interaction.user.id
+            },
+            {
+                "$inc": {
+                    "balance": -fine
+                }
+            }
+        )
+        embed=discord.Embed(
+            title="YOU ARE UNDER ARREST!",
+            description=f"You are caught by the police and got fined of {fine} coins.\nBetter luck next time.",
+            color=discord.Color.red()
+        )
+        await interaction.followup.send(embed=embed)
 
 # Events
 @bot.event
