@@ -339,6 +339,91 @@ async def rob(ctx, user: discord.Member = None):
         )
         await ctx.reply(embed=embed)
 
+@bot.command(name="coinflip", aliases=['cf'])
+async def coinflip(ctx, amount: int = None, guess: str = "heads"):
+    guess = guess.lower()
+    result = random.choice(['heads', 'tails'])
+    win = False
+    is_bet = False
+
+    if guess == result:
+        win = True
+    
+    acc = economy.find_one({
+        "userid": ctx.author.id
+    })
+    if acc:
+        if not amount:
+            is_bet = False
+        else:
+            if amount <= acc['balance']:
+                is_bet = True
+            else:
+                is_bet = False
+
+    if is_bet is False:
+        if amount:
+            embed2 = discord.Embed(
+                title="There's a problem!",
+                description="You flipped a coin but amount you entered is less than your balance OR you don't have an account.\nUse `.balance` to check your currency balance.\nCoin is still flipped but without betting amount!",
+                color=discord.Color.yellow()
+            )
+            await ctx.channel.send(f"{ctx.author.mention}", embed=embed2)
+
+        if win:
+            embed = discord.Embed(
+                title="Coinflip Result",
+                description=f"You flipped a coin\nGuess: {guess.capitalize()}\nResult: {result.capitalize()}\nYou WON!",
+                color=discord.Color.green()
+            )
+            await ctx.reply(embed=embed)
+        
+        elif not win:
+            embed = discord.Embed(
+                title="Coinflip Result",
+                description=f"You flipped a coin\nGuess: {guess.capitalize()}\nResult: {result.capitalize()}\nYou lost.",
+                color=discord.Color.red()
+            )
+            await ctx.reply(embed=embed)
+
+    elif is_bet:
+        if win:
+            economy.update_one(
+                {
+                    "userid": ctx.author.id
+                },
+                {
+                    "$inc": {
+                        "balance": amount
+                    }
+                }
+            )
+            embed=discord.Embed(
+                title="Coinflip Result",
+                description=f"You flipped a coin for {amount} coins\nGuess: {guess.capitalize()}\nResult: {result.capitalize()}\nYou WON!",
+                color=discord.Color.green()
+            )
+            await ctx.reply(embed=embed)
+
+        elif not win:
+            economy.update_one(
+                {
+                    "userid": ctx.author.id
+                },
+                {
+                    "$inc": {
+                        "balance": -amount
+                    }
+                }
+            )
+            embed=discord.Embed(
+                title="Coinflip Result",
+                description=f"You flipped a coin for {amount} coins\nGuess: {guess.capitalize()}\nResult: {result.capitalize()}\nYou lost.",
+                color=discord.Color.red()
+            )
+            await ctx.reply(embed=embed)
+
+
 # Tree Commands (SLASH)
 
 # BASIC COMMANDS
@@ -540,6 +625,93 @@ async def daily_sl(interaction: discord.Interaction):
         color=discord.Color.green()
     )
     await interaction.followup.send(embed=embed)
+
+@bot.tree.command(name="coinflip", description="Flip a coin without or with bet!")
+async def coinflip_sl(interaction: discord.Interaction, amount: int = None, guess: str = "heads"):
+    await interaction.response.defer()
+    guess = guess.lower()
+    result = random.choice(['heads', 'tails'])
+    win = False
+    is_bet = False
+
+    if guess == result:
+        win = True
+
+    acc = economy.find_one({
+        "userid": interaction.user.id
+    })
+    if acc:
+        if not amount:
+            is_bet = False
+        
+        else:
+            if amount <= acc['balance']:
+                is_bet = True
+
+            else:
+                is_bet = False
+
+    if is_bet is False:
+        if amount:
+            embed2 = discord.Embed(
+                title="There's a problem!",
+                description="You flipped a coin but amount you entered is less than your balance OR you don't have an account.\nUse `/balance` to check your currency balance.\nCoin is still flipped but without betting amount!",
+                color=discord.Color.yellow()
+            )
+            await interaction.channel.send(f"{interaction.user.mention}", embed=embed2)
+
+        if win:
+            embed = discord.Embed(
+                title="Coinflip Result",
+                description=f"You flipped a coin\nGuess: {guess.capitalize()}\nResult: {result.capitalize()}\nYou WON!",
+                color=discord.Color.green()
+            )
+            await interaction.followup.send(embed=embed)
+
+        elif not win:
+            embed = discord.Embed(
+                title="Coinflip Result",
+                description=f"You flipped a coin\nGuess: {guess.capitalize()}\nResult: {result.capitalize()}\nYou lost.",
+                color=discord.Color.red()
+            )
+            await interaction.followup.send(embed=embed)
+
+    elif is_bet:
+        if win:
+            economy.update_one(
+                {
+                    "userid": interaction.user.id
+                },
+                {
+                    "$inc": {
+                        "balance": amount
+                    }
+                }
+            )
+            embed= discord.Embed(
+                title="Coinflip Result",
+                description=f"You flipped a coin for {amount} coins\nGuess: {guess.capitalize()}\nResult: {result.capitalize()}\nYou WON!",
+                color=discord.Color.green()
+            )
+            await interaction.followup.send(embed=embed)
+
+        elif not win:
+            economy.update_one(
+                {
+                    "userid": interaction.user.id
+                },
+                {
+                    "$inc": {
+                        "balance": -amount
+                    }
+                }
+            )
+            embed=discord.Embed(
+                title="Coinflip Result",
+                description=f"You flipped a coin for {amount} coins\nGuess: {guess.capitalize()}\nResult: {result.capitalize()}\nYou lost.",
+                color=discord.Color.red()
+            )
+            await interaction.followup.send(embed=embed)
 
 # Events
 @bot.event
