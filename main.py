@@ -102,6 +102,50 @@ async def balance(ctx):
         color=discord.Color.green()
     )
     await ctx.reply(embed=embed)
+
+@bot.command(name="info", aliases=['accountinfo', 'acc'])
+async def acc_info(ctx):
+    acc = economy.find_one({"userid": ctx.author.id})
+    if not acc:
+        embed=discord.Embed(
+            title="Account not found!",
+            description="You don't have an active currecy account.\nUse `.open` to open one.",
+            color=discord.Color.red()
+        )
+        return await ctx.reply(embed=embed)
+
+    cd = countdown.find_one({"userid": ctx.author.id})
+    embed=discord.Embed(
+        title="Account Information",
+        description=f"Here is a brief information about {ctx.author.mention}'s currecy account:",
+        color=discord.Color.gold()
+    )
+    embed.add_field(
+        name="User ID",
+        value=ctx.author.id,
+        inline=False
+    )
+    embed.add_field(
+        name="Available Balance",
+        value=acc['balance'],
+        inline=False
+    )
+    embed.add_field(
+        name="Last Robbery",
+        value=f"<t:{(cd['rob'] - 86400)}:R>",
+        inline=False
+    )
+    embed.add_field(
+        name="Last Daily Claimed",
+        value=f"<t:{(cd['daily'] - 86400)}:R>",
+        inline=False
+    )
+    embed.add_field(
+        name="Created at",
+        value=f"<t:{(acc['createdat'])}:R>",
+        inline=False
+    )
+    await ctx.reply(embed=embed)
     
 @bot.command(name="transfer", aliases=['send'])
 async def transfer(ctx, user: discord.Member = None, coins: int = None):
@@ -508,6 +552,50 @@ async def balance(interaction: discord.Interaction):
         title=f"Available balance of {interaction.user}",
         description=f"You currently have `{acc['balance']}` in your currency account!",
         color=discord.Color.green()
+    )
+    await interaction.response.send_message(embed=embed)
+
+@bot.tree.command(name="accountinfo", description="Get an account information!")
+async def account_info_sl(interaction: discord.Interaction):
+    acc = economy.find_one({"userid": interaction.user.id})
+    if not acc:
+        embed=discord.Embed(
+            title="Account not found!",
+            description="You don't have an active currecy account.\nUse `.open` to open one.",
+            color=discord.Color.red()
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    cd = countdown.find_one({"userid": interaction.user.id})
+    embed=discord.Embed(
+        title="Account Information",
+        description=f"Here is a brief information about {interaction.user.mention}'s currecy account:",
+        color=discord.Color.gold()
+    )
+    embed.add_field(
+        name="User ID",
+        value=interaction.user.id,
+        inline=False
+    )
+    embed.add_field(
+        name="Available Balance",
+        value=acc['balance'],
+        inline=False
+    )
+    embed.add_field(
+        name="Last Robbery",
+        value=f"<t:{(cd['rob'] - 86400)}:R>",
+        inline=False
+    )
+    embed.add_field(
+        name="Last Daily Claimed",
+        value=f"<t:{(cd['daily'] - 86400)}:R>",
+        inline=False
+    )
+    embed.add_field(
+        name="Created at",
+        value=f"<t:{(acc['createdat'])}:R>",
+        inline=False
     )
     await interaction.response.send_message(embed=embed)
 
