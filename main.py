@@ -60,7 +60,6 @@ async def open(ctx):
     economy.insert_one({
         "userid": ctx.author.id,
         "balance": 1000,
-        "job": 0,
         "createdat": int(time.time())
     })
 
@@ -71,8 +70,7 @@ async def open(ctx):
         "$setOnInsert": {
             'rob': int(time.time()),
             'daily': int(time.time()),
-            'heist': int(time.time()),
-            'job': 0
+            'heist': int(time.time())
         }
     }, upsert=True)
 
@@ -511,7 +509,6 @@ async def open_sl(interaction: discord.Interaction):
     economy.insert_one({
         "userid": interaction.user.id,
         "balance": 1000,
-        "job": 0,
         "createdat": int(time.time())
     })
 
@@ -523,8 +520,7 @@ async def open_sl(interaction: discord.Interaction):
             "$setOnInsert": {
                 "rob": int(time.time()),
                 "daily": int(time.time()),
-                "heist": int(time.time()),
-                "job": 0
+                "heist": int(time.time())
             }
         },
         upsert=True
