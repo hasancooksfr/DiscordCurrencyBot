@@ -43,6 +43,86 @@ async def botinfo(ctx):
     )
     await ctx.reply(embed=embed)
 
+# HELP COMMAND
+
+@bot.command(name="help")
+async def help(ctx):
+    embed = discord.Embed(
+        title="Help Menu",
+        description="List of all commands in Currency Bot",
+        color=discord.Color.blurple()
+    )
+    embed.set_footer(
+        text="Made by hasancooksfr"
+    )
+    embed.add_field(
+        name="**BASIC**",
+        value="",
+        inline=False
+    )
+    embed.add_field(
+        name=".ping",
+        value="Ping the bot.\n`.ping`",
+        inline=False
+    )
+    embed.add_field(
+        name=".hello",
+        value="Say hello to the bot!\n`.hello`",
+        inline=False
+    )
+    embed.add_field(
+        name=".botinfo (bi)",
+        value="Obtain information about Currency Bot\n`.botinfo` or `.bi`",
+        inline=False
+    )
+    embed.add_field(
+        name="**ECONOMY**",
+        value="",
+        inline=False
+    )
+    embed.add_field(
+        name=".open",
+        value="Open a currency account!\n`.open`",
+        inline=False
+    )
+    embed.add_field(
+        name=".balance",
+        value="Check balance of your currency account\n`.balance`",
+        inline=False
+    )
+    embed.add_field(
+        name=".info (accountinfo)",
+        value="Obtain your currency account details\n`.info` or `.accountinfo`",
+        inline=False
+    )
+    embed.add_field(
+        name=".transfer (send)",
+        value="Transfer an amount of coins to another user\n`.transfer <@member> <amount>` or `.send <@member> <amount>`",
+        inline=False
+    )
+    embed.add_field(
+        name=".daily",
+        value="Claim random coins as daily reward\n`.daily`",
+        inline=False
+    )
+    embed.add_field(
+        name=".rob",
+        value="Rob an user's currency account\n`.rob <@member>`",
+        inline=False
+    )
+    embed.add_field(
+        name=".coinflip (cf)",
+        value="Bet your coins to flip a coin and win if you get it right (or don't bet, just play)\n`.coinflip [amount] [guess: heads or tails]` or `.cf [amount] [guess: heads or tails]`",
+        inline=False
+    )
+    embed.add_field(
+        name=".heist (bankrob)",
+        value="Rob an entire bank for high rewards (high risk too)\n`.heist` or `.bankrob`",
+        inline=False
+    )
+    await ctx.reply(embed=embed)
+
+
 # ECONOMY COMMANDS
 
 @bot.command(name="open")
@@ -579,6 +659,86 @@ async def botinfo_sl(interaction: discord.Interaction):
         color=discord.Color.green()
     )
     await interaction.response.send_message(embed=embed)
+
+# HELP COMMAND
+
+@bot.tree.command(name="help", description="Get help menu of bot")
+async def help_sl(interaction: discord.Interaction):
+    embed = discord.Embed(
+        title="Help Menu",
+        description="List of all commands in Currency Bot",
+        color=discord.Color.blurple()
+    )
+    embed.set_footer(
+        text="Made by hasancooksfr"
+    )
+    embed.add_field(
+        name="**BASIC**",
+        value="",
+        inline=False
+    )
+    embed.add_field(
+        name=".ping",
+        value="Ping the bot.\n`.ping`",
+        inline=False
+    )
+    embed.add_field(
+        name=".hello",
+        value="Say hello to the bot!\n`.hello`",
+        inline=False
+    )
+    embed.add_field(
+        name=".botinfo (bi)",
+        value="Obtain information about Currency Bot\n`.botinfo` or `.bi`",
+        inline=False
+    )
+    embed.add_field(
+        name="**ECONOMY**",
+        value="",
+        inline=False
+    )
+    embed.add_field(
+        name=".open",
+        value="Open a currency account!\n`.open`",
+        inline=False
+    )
+    embed.add_field(
+        name=".balance",
+        value="Check balance of your currency account\n`.balance`",
+        inline=False
+    )
+    embed.add_field(
+        name=".info (accountinfo)",
+        value="Obtain your currency account details\n`.info` or `.accountinfo`",
+        inline=False
+    )
+    embed.add_field(
+        name=".transfer (send)",
+        value="Transfer an amount of coins to another user\n`.transfer <@member> <amount>` or `.send <@member> <amount>`",
+        inline=False
+    )
+    embed.add_field(
+        name=".daily",
+        value="Claim random coins as daily reward\n`.daily`",
+        inline=False
+    )
+    embed.add_field(
+        name=".rob",
+        value="Rob an user's currency account\n`.rob <@member>`",
+        inline=False
+    )
+    embed.add_field(
+        name=".coinflip (cf)",
+        value="Bet your coins to flip a coin and win if you get it right (or don't bet, just play)\n`.coinflip [amount] [guess: heads or tails]` or `.cf [amount] [guess: heads or tails]`",
+        inline=False
+    )
+    embed.add_field(
+        name=".heist (bankrob)",
+        value="Rob an entire bank for high rewards (high risk too)\n`.heist` or `.bankrob`",
+        inline=False
+    )
+    await interaction.response.send_message(embed=embed)
+
 
 # ECONOMY COMMANDS
 
